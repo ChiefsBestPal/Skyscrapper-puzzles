@@ -1,4 +1,12 @@
 from PIL import Image, ImageDraw, ImageFont
+
+clues = (
+  0, 0, 0, 2, 2,0,
+  0, 0, 0, 6,3,0,
+  0, 4, 0, 0,0,0,
+  4, 4, 0, 3,0,0
+)
+
 deffnt = ImageFont.truetype("C:/Users/Antoine/Desktop/Coding+/Animation/arial.ttf", 40)
 
 def unFlatten(arr, n):
@@ -8,8 +16,8 @@ def unFlatten(arr, n):
 #!out.show()
 # with open('file_path', 'w') as file: 
 #     file.write('hello world !')
+Board_Size = 6 #?input("Enter N for a NxN Skyscrapper")
 cell_width,cell_height = 300,100 
-Board_Size = 4
 out = Image.new("RGB", (cell_width * Board_Size, cell_height * Board_Size), (255, 255, 255))
 width,height = out.size[0],out.size[1]
 AntEnderfnt = ImageFont.truetype("C:/Users/Antoine/Desktop/Coding+/Animation/AntenderHandwriting-Regular-Final1.ttf", 40)
@@ -55,12 +63,18 @@ for c,i in enumerate(range(1,Board_Size+1)):
 
 	clues_positions.append((p1[0]-second_margin
 	,deph_y + p1[1]+((new_cell_height//2*mt))))
+print((clues_positions))
 
+sorted_clue_coords = sorted(clues_positions,key = lambda x: clues_positions.index(x) % 4,reverse=False)
 
-	temp = clues_positions #WITH WHILE LOOP
-	print(temp)
-	for clue_position in clues_positions: #!put in class for object as input
-		d.text(clue_position, "?", font=deffnt, fill=(0, 0, 1))
+chunk_clue_coords = list(unFlatten(sorted_clue_coords,Board_Size))
+
+final_coords_clues = chunk_clue_coords[0] + chunk_clue_coords[1]+chunk_clue_coords[2][::-1] + chunk_clue_coords[3][::-1]
+
+for ix_clue,clue_position in enumerate(final_coords_clues): #!put in class for object as input
+	d.text(clue_position, str(clues[ix_clue]), font=deffnt, fill=(0, 0, 1))
+
 #while
 
 out.show()
+#? MADE BY ANT_ENDER FOR SKYSCRAPPER PUZZLES FROM CODEWARS: https://www.codewars.com/kata/5671d975d81d6c1c87000022/train/python
