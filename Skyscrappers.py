@@ -155,11 +155,7 @@ for ix_C,C in enumerate(clues):
 				S[indexes] = segment_pos[ix_poss]
 				print(S)
 				print(printS(S))
-			exit()
-	
-
-
-
+				exit()
 
 
 
@@ -169,4 +165,6 @@ Input  = [[3, 2, 3, 1, 0, 1],
 			[1, 2, 1, 4, 0, 1],
 			[0, 0, 0, 0, 0, 1],
 			[0, 1, 0, 0, 0, 1]]
-#print(verify(Input))
+print(verify(Input))
+
+
