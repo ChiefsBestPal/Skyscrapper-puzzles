@@ -1,0 +1,5 @@
+[flake8]
+ignore = E501
+per-file-ignores =
+    # line too long
+    C:/Users/Antoine/Desktop/Coding+/Skyscrapper/Skyscrappers UserInterface and Bitmaps.py: E501,

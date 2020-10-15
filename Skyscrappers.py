@@ -111,7 +111,7 @@ def solve_puzzle(clues):
 
 S = solve_puzzle(list(clues)) #AUTOMATIC PLACEMENT FOR CLUE1 AND CLUE4
 S = list(it.chain(*S)) #FLATTEN
-
+print(S)
 
 printS = lambda S: np.array(list(chunks(S,4)))#!affichage seulement
 #! C is for test matrix, ix is for actually filling up the grid       REDUCE THIS GRID AFTERWARDS
@@ -153,9 +153,7 @@ for ix_C,C in enumerate(clues):
 		for segment_pos in all_segment_poss: #exemple: for [1,2,3,4] in dic_of_poss[4]
 			for ix_poss,indexes in enumerate(segment_indexes):
 				S[indexes] = segment_pos[ix_poss]
-				print(S)
-				print(printS(S))
-				exit()
+				
 
 
 
