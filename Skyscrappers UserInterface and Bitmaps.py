@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 
 clues = (0, 0, 1, 2, 0, 2, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0)
-clues = (0, 0, 0, 2, 2, 0, 0, 0, 0, 6, 3, 0, 0, 4, 0, 0, 0, 0, 4, 4, 0, 3, 0, 0)
+#clues = (0, 0, 0, 2, 2, 0, 0, 0, 0, 6, 3, 0, 0, 4, 0, 0, 0, 0, 4, 4, 0, 3, 0, 0)
 
 deffnt = ImageFont.truetype("C:/Users/Antoine/Desktop/Coding+/Animation/arial.ttf", 40)
 
@@ -16,7 +16,7 @@ def unFlatten(arr, n):
 # with open('file_path', 'w') as file:
 #     file.write('hello world !')
 
-Board_Size = 6  # ?input("Enter N for a NxN Skyscrapper")
+Board_Size = 4  # ?input("Enter N for a NxN Skyscrapper")
 
 
 cell_width, cell_height = 300, 100
@@ -111,3 +111,5 @@ for ix_clue, clue_position in enumerate(
 
 out.show()
 # ? MADE BY ANT_ENDER FOR SKYSCRAPPER PUZZLES FROM CODEWARS: https://www.codewars.com/kata/5671d975d81d6c1c87000022/train/python
+
+

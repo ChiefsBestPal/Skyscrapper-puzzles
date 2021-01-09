@@ -138,22 +138,44 @@ C6,ix6 = C13[::-1],list(reversed(ix13))
 C7,ix7 = C12[::-1],list(reversed(ix12))
 
 all_segment_indexes = [ix0,ix1,ix2,ix3,ix4,ix5,ix6,ix7,ix8,ix9,ix10,ix11,ix12,ix13,ix14,ix15]
+list_of_C = [C0,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15] #! ? maybe use globals() for Ci ?
+
+
+print(all([0,13]))
 print(dic_of_poss)
 
-#!VERIFY(INPUT) NE DOIT PAS ETRE TRUE
-for ix_C,C in enumerate(clues):
-	if C in (0,4):
-		pass
+Anotated_arr = []
+N = 4
+for x in range(0, 9):
+    globals()['string%s' % x] = 'Hello'
+	
+for c,ixs_of_segment in enumerate(all_segment_indexes):
+	anotations = [num for num in range(1,N+1)]
+	if clues[c] not in (0,1,N):
+		del anotations[((N+2) - clues[c] + 0) - 1 : N+1]
+		print(clues[c])
+		print(anotations)
 	else:
-		segment_indexes = all_segment_indexes[ix_C] #"ix??""
-		all_segment_poss = dic_of_poss[C]#C is used as key here
+		
+		pass
 
-		print(all_segment_poss)
-		print(segment_indexes)
-		for segment_pos in all_segment_poss: #exemple: for [1,2,3,4] in dic_of_poss[4]
-			for ix_poss,indexes in enumerate(segment_indexes):
-				S[indexes] = segment_pos[ix_poss]
-				
+
+#len(ix##) = N
+# for ix_C,C in enumerate(clues):
+# 	if C in (0,4):
+# 		pass
+# 	else:
+# 		segment_indexes = all_segment_indexes[ix_C] #"ix??""
+# 		all_segment_poss = dic_of_poss[C]#C is used as key here
+
+# 		print(all_segment_poss)
+# 		print(segment_indexes)
+# 		for segment_pos in all_segment_poss: #exemple: for [1,2,3,4] in dic_of_poss[4]
+# 			for ix_poss,indexes in enumerate(segment_indexes):
+# 				S[indexes] = segment_pos[ix_poss]
+# 				print(S)
+# 				print(printS(S))
+# 				exit()
 
 
 
@@ -163,6 +185,7 @@ Input  = [[3, 2, 3, 1, 0, 1],
 			[1, 2, 1, 4, 0, 1],
 			[0, 0, 0, 0, 0, 1],
 			[0, 1, 0, 0, 0, 1]]
+
+print(printS(S))
+print(printS(clues))			
 print(verify(Input))
-
-
