@@ -189,3 +189,12 @@ Input  = [[3, 2, 3, 1, 0, 1],
 print(printS(S))
 print(printS(clues))			
 print(verify(Input))
+
+
+def RELATIVE_DISTANCE_FROM_ANY_EDGE(N):
+
+    arr = [i for i in range(0, N // 2)]
+    if N % 2 == 0:
+        return arr + arr[::-1]
+    else:
+        return arr + [N//2] + arr[::-1]
