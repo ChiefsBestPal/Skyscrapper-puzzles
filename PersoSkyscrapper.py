@@ -2,6 +2,8 @@ import numpy as np
 import itertools as it
 import typing
 import re
+import operator as op
+import itertools as it
 clues = [
   0, 0, 1, 2,   
   0, 2, 0, 0,   
@@ -18,11 +20,12 @@ sol = ( ( 2, 1, 4, 3 ),
 #* II. corrolary following I.: If unit has 1 only possibility (out of9) for a value, place value there
 # --> If all cells apart A2 in row (unit) lack a certain possible value, A2 is assigned that certain value 
 #* III. Complimentary of I. and II. will change peers of peers, use: Notation, update possibilities and backtracking
+class helper():
+    pass
 
 
 
-
-def getCellIxFromRowIx(rowIx,N):
+def getCellIxFromRowIx(rowIx,N) -> helper():
     """retuns an array of all cells
     indices from row index 
     >>> getCellIxFromRowIx(2,4)
@@ -31,7 +34,7 @@ def getCellIxFromRowIx(rowIx,N):
     firstCellOfRow = rowIx * N
     return [cellIx for cellIx in range(firstCellOfRow, firstCellOfRow + N)]
 
-def getCellIxFromColIx(colIx,N):
+def getCellIxFromColIx(colIx,N) -> helper():
     """returns an array of all cells 
     indices from col index
     >>> getCellIxFromColIx(0,4)
@@ -40,7 +43,7 @@ def getCellIxFromColIx(colIx,N):
     firstCellOfCol = colIx
     return [firstCellOfCol + i * N for i in range(N)]
 
-def getCellIxFromClueIx(clueIx,N):
+def getCellIxFromClueIx(clueIx,N) -> helper():
     """returns an array of all cells
     indices from value index (from leftupmost cell, 0 to 15 going clockwise)
     >>> warning: CellIx and ClueIx are different in their disposition !!!
@@ -152,36 +155,38 @@ state = performEdgeClueIntialization()
 #!Add CP queue (FIFO?) for optimization for very long and random puzzles
 #!https://www.ibm.com/support/knowledgecenter/SSSA5P_20.1.0/ilog.odms.cplex.help/refcppcplex/html/propagation.html
 """
+def getCrossIxFromCell(state,cellIx) -> helper():
+    """Cool to returns all cells in the row and column of the given cell
+    >>> getCrossIxFromCell(...state, 2) and state.N=4
+            [0,1,3,6,10,14]"""
+    rowIx,colIx = divmod(cellIx,state.N) #row jump by Nix(truediv), col by 1ix (mod)=> shown in other helper functions!
+
+    peers = set(getCellIxFromRowIx(rowIx,state.N))\
+        ^ (set(getCellIxFromColIx(colIx,state.N))) #Binary op as .symetric_difference()
+    return list(peers)
+
+
+def propagateFromSolvedCell(initialState,cellIx): #?-> State():
+    """ for input cell, if it is solved then eliminate all
+    poss of the res value in the cell's row and col """
+    cell = initialState.board[cellIx]
+    solvedValueToEliminate =  next(iter(cell)) if len(cell) == 1 else None
+
+    crossIndices = getCrossIxFromCell(initialState,cellIx)
+    for crossIx in crossIndices:
+        try:
+            initialState.board[crossIx].remove(solvedValueToEliminate)
+        except (KeyError,AttributeError):
+            pass
+        else:
+            continue
+    
+    return initialState
+
+
 def propagateConstraints(state=State(clues)):
 
     STATE = state
-
-    def getCrossIxFromCell(state,cellIx):
-        """Cool to returns all cells in the row and column of the given cell
-        >>> getCrossIxFromCell(...state, 2) and state.N=4
-                [0,1,3,6,10,14]"""
-        rowIx,colIx = divmod(cellIx,state.N) #row jump by Nix(truediv), col by 1ix (mod)
-
-        peers = set(getCellIxFromRowIx(rowIx,state.N))\
-            ^ (set(getCellIxFromColIx(colIx,state.N))) #Binary op as .symetric_difference()
-        return list(peers)
-
-    def propagateFromSolvedCell(initialState,cellIx): #?-> State():
-        """ for input cell, if it is solved then eliminate all
-        poss of the res value in the cell's row and col """
-        cell = initialState.board[cellIx]
-        solvedValueToEliminate =  next(iter(cell)) if len(cell) == 1 else None
-
-        crossIndices = getCrossIxFromCell(initialState,cellIx)
-        for crossIx in crossIndices:
-            try:
-                initialState.board[crossIx].remove(solvedValueToEliminate)
-            except (KeyError,AttributeError):
-                pass
-            else:
-                continue
-        
-        return initialState
 
     for cellIx,cell in enumerate(STATE.board):
         #print(STATE.board)
@@ -189,7 +194,77 @@ def propagateConstraints(state=State(clues)):
     
     return STATE #Would yield be more efficient?
 
+
 state = propagateConstraints(state)
+
+#*Process of Elimination: Solve value if it is not present in other cells in its row and/or column
+"""  """
+
+def getRowIxFromCellIx(state,cellIx) -> helper():
+    """ invert input and output of getCellIxFromRowIx
+        similar logic as cross helper function """
+    rowIx = cellIx // state.N
+    return sorted({cellIx} ^ set(getCellIxFromRowIx(rowIx,state.N)))
+    
+
+def getColIxFromCellIx(state,cellIx) -> helper():
+    """ invert input and output of getCellIxFromColIx
+        similar logic as cross helper function """
+    colIx = cellIx % state.N
+    return sorted({cellIx} ^ set(getCellIxFromColIx(colIx,state.N)))
+
+#! Missing: state.queue, which right now is a list of newly-resolved cell indices from which constraints need to be propagated
+
+def poeCellSearch(state,modifiedCellIx,deletedValue):
+    """ Consider value no longer a constraints for a certain cell 
+        1. Get all row ix that have this value as poss 
+            and store them in filtered array
+        2. if and only if len(arr) == 1, then newcellIx/arr[0] == value
+        3. repeat for columns 
+        (might need optimization for larger grids) """
+    
+    if deletedValue not in state.board[modifiedCellIx]:#! This is because there is no queue yet so we iterate everything to check
+        return state
+
+    rowIndices,colIndices = map(op.methodcaller(r'__call__',state,modifiedCellIx),\
+                                [getRowIxFromCellIx,getColIxFromCellIx]) #callable *arg
+
+    unpackedIndicesForCellIx = [*rowIndices,*colIndices]
+
+    filteredArr = lambda cellIndices : list(filter(lambda ix: deletedValue in state.board[ix], cellIndices))# >>> see docstring
+
+    R,C = map(filteredArr,[rowIndices,colIndices])#filtered row and col
+    newCellWithValueIx = list(R+C) if abs(~(len(R) & len(C))) else [] #If col OR row have 0 poss, ternary returns true/arr[0] >>> see docstring
+
+    if len(filteredArr(unpackedIndicesForCellIx)) <= 1: #0: works for col and row 1: works for one, still have to place it (constraint) 
+        state.board[modifiedCellIx] = {deletedValue}
+        try:
+            state.board[newCellWithValueIx[0]] = state.board[newCellWithValueIx[0]] - {deletedValue}
+        except IndexError:
+            print('\t0 poss in col and 0 poss in row')
+
+    else:#same structure as if
+        if newCellWithValueIx: #row OR col has 0 cell with possible value;
+            state.board[modifiedCellIx] = {deletedValue}
+            for cellIx in newCellWithValueIx:
+                state.board[cellIx] = state.board[cellIx] - {deletedValue} 
+
+    RES = state
+    return RES
+
+#*####################################################
+for ix in range(state.N**2):
+    state = poeCellSearch(state,ix,4) #!4 is arbitrary here for tests -> count all different sets with 1 value
+#*##########################################################
+
+
+#* clue elimination using the sequence filtration technique 
+
+
+
+
+
+
 
 if __name__ == '__main__':
     def chunk(N,arr):
@@ -197,7 +272,7 @@ if __name__ == '__main__':
 	    for i in range(0, len(arr), N):  
 		    yield arr[i:i + N]
 
-    x = list((chunk(4,state.board)))
+    x = list((chunk(state.N,state.board)))
 
     def nestedRecursiveCastString(item):
 
