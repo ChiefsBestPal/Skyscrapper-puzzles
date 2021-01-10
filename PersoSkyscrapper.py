@@ -258,12 +258,65 @@ for ix in range(state.N**2):
 #*##########################################################
 
 
-#* clue elimination using the sequence filtration technique 
+#* clue elimination using the sequence filtration technique
 
 
+def possibleSequencesForClueUnit(state,clueIx) -> helper(): #!Look up optimization... O(n) This has greatest impact on performance for larger puzzles
+    """ from clue, all combinations with unique elements respecting order
+        of cells/sets """
+    cellIndices = getCellIxFromClueIx(clueIx,state.N)
+    arr = []
+    for cellIx in cellIndices:
+        arr.append(state.board[cellIx])
+
+    return list( {el for el in it.product(*arr) if len(set(el)) == state.N})
+    
 
 
+def filterValidSequences(clue,*sequences):
+    """ for all possible sequence of row or col (unit) of clue,
+        filter the ones that respect the clue
+        >>> SEQ = possibleSequencesForUnit(state,3)
+        >>> list(validSequences(2,*SEQ))
+            [(3, 1, 2, 4), (3, 2, 1, 4)] (example) """
+    for sequence in sequences:
+        visible,max = 0,0
+        for value in sequence:
+            if value > max:
+                visible += 1
+                max = value
 
+        if visible == clue:
+            yield sequence
+
+
+def clueElimination(state,clueIx,validSequences):
+    """ replace constraints lists with validSequences 
+    for clue and itsaffected cells  """
+    STATE = state
+   
+    def seqToConstraintList(validSequences) -> helper():
+        """ convert list of working sequences
+        into list of sets used in state.board
+        >>> seqToConstraintList(...,...,[(3, 1, 2, 4), (3, 2, 1, 4)]) 
+            [{3},{1,2},{2,1},{4}] """
+        return [set(possValue) for possValue in zip(*validSequences)]
+
+    cluePossibilities = seqToConstraintList(validSequences)
+    cellIndicesOfClue =  getCellIxFromClueIx(clueIx,state.N)
+    for cellIx,cluePoss in zip(cellIndicesOfClue,cluePossibilities):
+        # assign new sequence value to state.board at clue ix
+        STATE.board[cellIx] = cluePoss
+    return STATE
+
+
+#*##################################################################
+for clueIx,clue in enumerate(clues):
+    if clue != 0:
+        sequences = possibleSequencesForClueUnit(state,clueIx)
+        validSequences = list(filterValidSequences(clue,*sequences))
+        state = clueElimination(state,clueIx,validSequences)
+#*##################################################################
 
 
 if __name__ == '__main__':
