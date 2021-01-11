@@ -1,19 +1,61 @@
+from tkinter.constants import SOLID
 import numpy as np
 import itertools as it
 import typing
 import re
 import operator as op
 import itertools as it
-clues = [
+from collections import Counter
+cluesFOURxFOUR = [
   0, 0, 1, 2,   
   0, 2, 0, 0,   
   0, 3, 0, 0, 
   0, 1, 0, 0 ]
-sol = ( ( 2, 1, 4, 3 ), 
-        ( 3, 4, 1, 2 ), 
-        ( 4, 2, 3, 1 ), 
-        ( 1, 3, 2, 4 ))
+clues = [ 0, 0, 0, 2, 2, 0,
+          0, 0, 0, 6, 3, 0,
+          0, 4, 0, 0, 0, 0,
+          4, 4, 0, 3, 0, 0]
+expected = [ 5, 6, 1, 4, 3, 2 , 
+             4, 1, 3, 2, 6, 5 , 
+            2, 3, 6, 1, 5, 4 , 
+            6, 5, 4, 3, 2, 1 , 
+             1, 2, 5, 6, 4, 3 , 
+             3, 4, 2, 5, 1, 6 ]
+cluesSecondTest = [ 3, 2, 2, 3, 2, 1,
+          1, 2, 3, 3, 2, 2,
+          5, 1, 2, 2, 4, 3,
+          3, 2, 1, 2, 2, 4]
+          
+expectedSecondTest = [ 2, 1, 4, 3, 5, 6 ,
+             1, 6, 3, 2, 4, 5 ,
+             4, 3, 6, 5, 1, 2 ,
+             6, 5, 2, 1, 3, 4 ,
+             5, 4, 1, 6, 2, 3 ,
+             3, 2, 5, 4, 6, 1 ]
+#clues = cluesSecondTest
+#expected = expectedSecondTest
 
+def display() -> '__main__':
+    global state
+    def chunk(N,arr):
+        
+	    for i in range(0, len(arr), N):  
+		    yield arr[i:i + N]
+
+    x = list((chunk(state.N,state.board)))
+
+    def nestedRecursiveCastString(item):
+
+        if isinstance(item, list):
+            return [nestedRecursiveCastString(x) for x in item if x]
+        else:
+            return str(item).center(20)
+
+    z = nestedRecursiveCastString(x)
+
+    for i in z:
+        print(i)
+    print('')
 #! CONSTRAINT PROPAGATION NOTES FROM SUDOKU SOLVER:
 #* I. If cell has 1 possible value, then remove this value from the cell's peers 
 # --> If A1 is assigned value, 20 peers lose that possible value
@@ -22,7 +64,6 @@ sol = ( ( 2, 1, 4, 3 ),
 #* III. Complimentary of I. and II. will change peers of peers, use: Notation, update possibilities and backtracking
 class helper():
     pass
-
 
 
 def getCellIxFromRowIx(rowIx,N) -> helper():
@@ -78,11 +119,6 @@ class State(object):
             (->allow recursive local changes)'.format(self.clues)
 
 
-def solveSkyscraper(clues):
-    state = State(clues)
-    pass 
-    #? [...]
-    return state
 
 #!state = State(clues)
 #!assert bool(globals()['edgeConstraintCellWithClue'])
@@ -106,7 +142,9 @@ def performEdgeClueIntialization(state=State(clues)):
             try:
                 cell.remove(i) #del cell[i]
             except KeyError as err:
-                print(err)
+                err
+                #// print(err)
+                pass
         
         return cell
     one = 0
@@ -114,7 +152,7 @@ def performEdgeClueIntialization(state=State(clues)):
     zero = 0
     for clueIx,clue in enumerate(state.clues):
         cellIndices = getCellIxFromClueIx(clueIx,state.N)
-        print(cellIndices)
+        #// print(cellIndices)
         if 1 < clue < state.N:
             for edgeDistance,cellIx in enumerate(cellIndices):
                 cell = state.board[cellIx]
@@ -143,7 +181,7 @@ def performEdgeClueIntialization(state=State(clues)):
         else:
             
             zero+= 1
-    print('Zero: ', zero, '  One: ', one, '  TwoThree: ', twothree,end='\n'*3)
+    #// print('Zero: ', zero, '  One: ', one, '  TwoThree: ', twothree,end='\n'*3)
     return STATE
 
 
@@ -152,8 +190,8 @@ state = performEdgeClueIntialization()
 
 #*Constraint propagation; elimination of newly impossible values\
 """
-#!Add CP queue (FIFO?) for optimization for very long and random puzzles
-#!https://www.ibm.com/support/knowledgecenter/SSSA5P_20.1.0/ilog.odms.cplex.help/refcppcplex/html/propagation.html
+#TODO Add CP queue (FIFO?) for optimization for very long and random puzzles
+#TODO https://www.ibm.com/support/knowledgecenter/SSSA5P_20.1.0/ilog.odms.cplex.help/refcppcplex/html/propagation.html
 """
 def getCrossIxFromCell(state,cellIx) -> helper():
     """Cool to returns all cells in the row and column of the given cell
@@ -189,7 +227,7 @@ def propagateConstraints(state=State(clues)):
     STATE = state
 
     for cellIx,cell in enumerate(STATE.board):
-        #print(STATE.board)
+
         STATE = propagateFromSolvedCell(STATE,cellIx)
     
     return STATE #Would yield be more efficient?
@@ -213,7 +251,7 @@ def getColIxFromCellIx(state,cellIx) -> helper():
     colIx = cellIx % state.N
     return sorted({cellIx} ^ set(getCellIxFromColIx(colIx,state.N)))
 
-#! Missing: state.queue, which right now is a list of newly-resolved cell indices from which constraints need to be propagated
+#TODO Missing: state.queue, which right now is a list of newly-resolved cell indices from which constraints need to be propagated
 
 def poeCellSearch(state,modifiedCellIx,deletedValue):
     """ Consider value no longer a constraints for a certain cell 
@@ -234,34 +272,33 @@ def poeCellSearch(state,modifiedCellIx,deletedValue):
     filteredArr = lambda cellIndices : list(filter(lambda ix: deletedValue in state.board[ix], cellIndices))# >>> see docstring
 
     R,C = map(filteredArr,[rowIndices,colIndices])#filtered row and col
-    newCellWithValueIx = list(R+C) if abs(~(len(R) & len(C))) else [] #If col OR row have 0 poss, ternary returns true/arr[0] >>> see docstring
+    newCellWithValueIx = list(R+C) if not (bool(R) and bool(C)) else [] #*abs(~(len(R) & len(C))) If col OR row have 0 poss, ternary returns true/arr[0] >>> see docstring
 
     if len(filteredArr(unpackedIndicesForCellIx)) <= 1: #0: works for col and row 1: works for one, still have to place it (constraint) 
         state.board[modifiedCellIx] = {deletedValue}
         try:
             state.board[newCellWithValueIx[0]] = state.board[newCellWithValueIx[0]] - {deletedValue}
         except IndexError:
-            print('\t0 poss in col and 0 poss in row')
+            #//print('\t0 poss in col and 0 poss in row')
+            pass
 
     else:#same structure as if
         if newCellWithValueIx: #row OR col has 0 cell with possible value;
             state.board[modifiedCellIx] = {deletedValue}
             for cellIx in newCellWithValueIx:
+                #// print('i')
                 state.board[cellIx] = state.board[cellIx] - {deletedValue} 
 
     RES = state
     return RES
 
-#*####################################################
-for ix in range(state.N**2):
-    state = poeCellSearch(state,ix,4) #!4 is arbitrary here for tests -> count all different sets with 1 value
-#*##########################################################
-
+display()
+print('SHOULD WORK FOR NxN up to here')
 
 #* clue elimination using the sequence filtration technique
 
 
-def possibleSequencesForClueUnit(state,clueIx) -> helper(): #!Look up optimization... O(n) This has greatest impact on performance for larger puzzles
+def possibleSequencesForClueUnit(state,clueIx) -> helper(): #TODO Look up optimization... O(n) This has greatest impact on performance for larger puzzles
     """ from clue, all combinations with unique elements respecting order
         of cells/sets """
     cellIndices = getCellIxFromClueIx(clueIx,state.N)
@@ -304,37 +341,110 @@ def clueElimination(state,clueIx,validSequences):
 
     cluePossibilities = seqToConstraintList(validSequences)
     cellIndicesOfClue =  getCellIxFromClueIx(clueIx,state.N)
+    
     for cellIx,cluePoss in zip(cellIndicesOfClue,cluePossibilities):
         # assign new sequence value to state.board at clue ix
         STATE.board[cellIx] = cluePoss
     return STATE
 
 
-#*##################################################################
-for clueIx,clue in enumerate(clues):
-    if clue != 0:
-        sequences = possibleSequencesForClueUnit(state,clueIx)
-        validSequences = list(filterValidSequences(clue,*sequences))
-        state = clueElimination(state,clueIx,validSequences)
-#*##################################################################
+def elimClue(clues,state):
+    for clueIx,clue in enumerate(clues):
+        if clue != 0:
+            sequences = possibleSequencesForClueUnit(state,clueIx)
+            validSequences = list(filterValidSequences(clue,*sequences))
+            state = clueElimination(state,clueIx,validSequences)
+    return state
+
+def isSolved(state) -> State():
+    for set in state.board:
+        if len(set) != 1:
+            return False
+    return True
+
+def countPossibilities(state):
+    """ DEBUGGING """
+    solution = list(map(lambda set: next(iter(set)),list(filter(lambda x: len(x) == 1,state.board))))
+    for num in range(1,state.N+1):
+        if solution.count(num) == state.N:
+            solution = list(filter((num).__ne__, solution))
+    
+    return solution#placed values
+    #!return max(dict.fromkeys(solution),key= solution.count)
+
+def countNums(state):
+    arr = list(filter(lambda x: len(x) != 1,state.board))
+    arr = list(map(list,arr))
+    flat = [item for sublist in arr for item in sublist]
+    return Counter(flat)
+
+print(countNums(state))
+
+state = elimClue(clues,state)
+state = propagateConstraints(state)
+print(countNums(state))
+
+#// ---------------------------------------------------------------------------------------------
+print('\n\n\n...') #TODO FIND CONSTRAINT LIST ORDER.....)
+
+""" need to see if mutations happened to least uncertain value, 0 mutation, then check second least uncertain
+    when mutation, apply deletedvalue to PoE"""
+count = 0
+while not isSolved(state):
+    print('Iteration number: ' + str(count))
+    count += 1
+    counterOfListConstraints = countNums(state)
+    print(counterOfListConstraints.keys())
+    print(counterOfListConstraints)
+    display()
+    try:
+        leastUncertainDeletedValue = list(counterOfListConstraints.keys())[-1] #! Make so that if other values are equal to l[-1], then choose the one that ...
+        leastUncertainDelValuesList = [leastUncertainDeletedValue]
+
+        for k,v in counterOfListConstraints.items():
+            if v == counterOfListConstraints[leastUncertainDeletedValue]:
+                leastUncertainDelValuesList.append(k)
+            if v < counterOfListConstraints[leastUncertainDeletedValue]:
+                leastUncertainDeletedValue = k
+                break
+        leastUncertainDeletedValue = max(leastUncertainDelValuesList) #!arbitrary
+        print(leastUncertainDeletedValue)
+
+    except IndexError as emptyConstraintLists:
+        print('All constraint lists are empty')
+        break
+    for ix in range(state.N**2):
+        state = poeCellSearch(state,ix,leastUncertainDeletedValue)
+    display()
+    print('')
+    state = elimClue(clues,state)
+    display()
+    print('just eliminated clues')
+    while state != propagateConstraints(state):
+        state = propagateConstraints(state)
+    while state != elimClue(clues,state): #! Heavy on time complexity...
+        state = elimClue(clues,state)
 
 
-if __name__ == '__main__':
-    def chunk(N,arr):
-        
-	    for i in range(0, len(arr), N):  
-		    yield arr[i:i + N]
+    display()
+    if count >= 1000: #TODO __DEBUG__
+        break
+    
 
-    x = list((chunk(state.N,state.board)))
 
-    def nestedRecursiveCastString(item):
 
-        if isinstance(item, list):
-            return [nestedRecursiveCastString(x) for x in item if x]
-        else:
-            return str(item).center(20)
+if __name__ == '__main__': #! many useful prints were grey commented out for faster performance evaluation
+    solution = list(map(lambda set: next(iter(set)),state.board))
+    print('\n\nsolution output: ' + str(solution))
+    print('\n\nexpected output: ' + str(expected))
+    print('Right Answer: ' + str(solution == expected))
+    display()
+exit()
 
-    z = nestedRecursiveCastString(x)
 
-    for i in z:
-        print(i)
+def chunkTup(N,arr): 
+	for i in range(0, len(arr), N):  
+		yield tuple(arr[i:i + N])
+solution = list(map(lambda set: next(iter(set)),state.board))
+
+print((tuple(chunkTup(state.N,solution))))
